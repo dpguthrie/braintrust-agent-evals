@@ -1,0 +1,7 @@
+name = "minimal-cli-tool/help-flow"
+
+[environment]
+dockerfile = "environment/Dockerfile"
+
+[verifier]
+command = "bash /tests/test.sh"

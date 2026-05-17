@@ -1,0 +1,16 @@
+{
+  "artifacts": [
+    {
+      "key": "summary",
+      "paths": ["summary.json"],
+      "kind": "json"
+    },
+    {
+      "key": "command_log",
+      "paths": ["command-log.jsonl"],
+      "kind": "jsonl"
+    }
+  ],
+  "command_log_key": "command_log",
+  "command_span_prefix": "tool"
+}

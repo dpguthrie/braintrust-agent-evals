@@ -1,0 +1,23 @@
+{
+  "artifacts": [
+    {
+      "key": "summary",
+      "paths": ["summary.json"],
+      "kind": "json"
+    },
+    {
+      "key": "narrative",
+      "paths": ["narrative.md"],
+      "kind": "text",
+      "limit": 20000
+    },
+    {
+      "key": "command_log",
+      "paths": ["command-log.jsonl"],
+      "kind": "jsonl"
+    }
+  ],
+  "command_log_key": "command_log",
+  "command_span_prefix": "tool",
+  "command_tool_name": "acme"
+}

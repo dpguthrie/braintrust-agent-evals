@@ -1,0 +1,53 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "braintrust-harbor"
+version = "0.1.0a1"
+description = "Harbor-first, Braintrust-backed evaluation helpers for coding-agent tooling."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+  { name = "Braintrust" },
+]
+keywords = ["braintrust", "harbor", "evals", "agents", "coding-agents"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Testing",
+]
+dependencies = [
+  "braintrust>=0.18.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+]
+
+[project.scripts]
+braintrust-harbor = "braintrust_harbor.cli:main"
+bt-harbor = "braintrust_harbor.cli:main"
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/src",
+  "/tests",
+  "/docs",
+  "/examples",
+  "/README.md",
+  "/LICENSE",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/braintrust_harbor"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

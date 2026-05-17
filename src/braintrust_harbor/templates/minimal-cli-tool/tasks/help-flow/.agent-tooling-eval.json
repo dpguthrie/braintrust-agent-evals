@@ -1,0 +1,12 @@
+{
+  "input": {
+    "prompt": "Use the acme CLI to inspect the project health and write a short handoff."
+  },
+  "expected": {
+    "route": "inspect"
+  },
+  "metadata": {
+    "example": "minimal-cli-tool",
+    "tool": "acme"
+  }
+}
