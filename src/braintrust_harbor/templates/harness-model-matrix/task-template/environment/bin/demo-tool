@@ -1,0 +1,65 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import datetime as dt
+import json
+import os
+from pathlib import Path
+import sys
+
+
+LOG_PATH = Path("/logs/artifacts/command-log.jsonl")
+VERSION_PATH = Path("/opt/harness-model-matrix/tooling-version.txt")
+
+
+def log(command: str, args: list[str]) -> None:
+    LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    row = {
+        "ts": dt.datetime.now(tz=dt.UTC).isoformat(),
+        "tool": "demo-tool",
+        "command": command,
+        "command_class": f"demo-tool.{command}",
+        "argv": args,
+        "cwd": os.getcwd(),
+    }
+    with LOG_PATH.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(row, sort_keys=True) + "\n")
+
+
+def tooling_version() -> str:
+    if VERSION_PATH.exists():
+        return VERSION_PATH.read_text(encoding="utf-8").strip()
+    return "unknown"
+
+
+def inspect_workspace() -> dict[str, object]:
+    repo = Path("/app/repo")
+    files = []
+    if repo.exists():
+        files = [str(path.relative_to(repo)) for path in sorted(repo.rglob("*")) if path.is_file()][:25]
+    return {
+        "tooling_version": tooling_version(),
+        "repo_path": str(repo),
+        "repo_files": files,
+        "recommended_next_action": "Use the evidence above to write summary.json and narrative.md.",
+    }
+
+
+def main(argv: list[str]) -> int:
+    command = argv[1] if len(argv) > 1 else "help"
+    log(command, argv[1:])
+    if command in {"help", "--help", "-h"}:
+        print("demo-tool commands: inspect, version, help")
+        return 0
+    if command == "version":
+        print(tooling_version())
+        return 0
+    if command == "inspect":
+        print(json.dumps(inspect_workspace(), indent=2, sort_keys=True))
+        return 0
+    print(f"unknown command: {command}", file=sys.stderr)
+    return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv))

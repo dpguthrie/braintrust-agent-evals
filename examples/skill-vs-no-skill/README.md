@@ -3,7 +3,17 @@
 Use this pattern when you want to measure whether a skill, rules file, MCP
 server, or tool-specific guide actually improves coding-agent behavior.
 
-Recommended Harbor representation:
+This is a task-layout pattern, not a packaged template. It is useful when the
+main evaluation question is a controlled comparison:
+
+```text
+Does this added guidance or tool make agents more successful, more reliable, or
+cheaper on the same task?
+```
+
+## Recommended Harbor Layout
+
+Create paired Harbor tasks:
 
 ```text
 tasks/
@@ -14,10 +24,16 @@ tasks/
 ```
 
 Each directory is an ordinary Harbor task with its own `task.toml`,
-`instruction.md`, `environment/`, and `tests/`. For `no-skill`, keep the same
-fixtures and verifier, but remove the skill installation from the sandbox.
+`instruction.md`, `environment/`, and `tests/`.
 
-Then run them with a normal Harbor job config:
+For each pair:
+
+- Keep fixtures, prompt intent, and verifier criteria the same.
+- In `with-skill`, install the skill, MCP server, rules file, or guide.
+- In `no-skill`, remove only that added guidance or tool.
+- Label the rows with metadata such as `scenario` and `variant`.
+
+## Example Harbor Job
 
 ```yaml
 job_name: skill-comparison
@@ -33,15 +49,33 @@ agents:
     model_name: anthropic/claude-sonnet-4-6
 ```
 
-Use task metadata or a sidecar artifact to label rows with `scenario` and
-`variant` when importing the Harbor job into Braintrust.
+Run and import with:
 
-Useful scores:
+```bash
+bt-harbor run harbor-job.json \
+  --project "agent-tooling-demo" \
+  --suite-artifacts suite-artifacts.json \
+  --scorer "scorers:variant_quality"
+```
 
-- route correctness
-- schema or handoff validity
-- evidence before mutation
-- tool-call order
-- side-effect safety
-- harness reliability
-- cost/runtime efficiency
+## Useful Scores
+
+- Route correctness.
+- Schema or handoff validity.
+- Evidence before mutation.
+- Tool-call order.
+- Side-effect safety.
+- Harness reliability.
+- Cost and runtime efficiency.
+
+## How To Modify It
+
+Use this pattern for any A/B agent-tooling comparison:
+
+- `with-mcp` vs. `no-mcp`
+- `with-rules` vs. `no-rules`
+- `new-tool-version` vs. `old-tool-version`
+- `strict-system-prompt` vs. `default-system-prompt`
+
+Keep variants as close as possible. If several things change at once, the
+Braintrust comparison will show a difference but not explain what caused it.

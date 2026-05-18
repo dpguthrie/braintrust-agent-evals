@@ -1,0 +1,59 @@
+{
+  "job_name": "harness-model-demo",
+  "project": "agent-tooling-demo",
+  "prompt": "Use the demo-tool CLI to inspect the workspace and recommend the next action for the developer. Write a structured summary and include evidence from the tool output.",
+  "repo": {
+    "url": "",
+    "ref": ""
+  },
+  "harbor": {
+    "jobs_dir": "jobs",
+    "n_attempts": 1,
+    "n_concurrent_trials": 2,
+    "environment": {
+      "type": "docker"
+    }
+  },
+  "task": {
+    "name": "prompted-tooling-task",
+    "expected": {
+      "requires_summary": true,
+      "requires_tool_use": "demo-tool"
+    },
+    "metadata": {
+      "scenario": "prompted-tooling-task"
+    }
+  },
+  "tooling_versions": [
+    {
+      "name": "current",
+      "install_command": "",
+      "metadata": {
+        "tooling_channel": "current"
+      }
+    },
+    {
+      "name": "latest",
+      "install_command": "",
+      "metadata": {
+        "tooling_channel": "latest"
+      }
+    }
+  ],
+  "agents": [
+    {
+      "name": "codex",
+      "model_name": "openai/gpt-5.4",
+      "env": {
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}"
+      }
+    },
+    {
+      "name": "claude-code",
+      "model_name": "anthropic/claude-sonnet-4-6",
+      "env": {
+        "ANTHROPIC_API_KEY": "${ANTHROPIC_API_KEY}"
+      }
+    }
+  ]
+}

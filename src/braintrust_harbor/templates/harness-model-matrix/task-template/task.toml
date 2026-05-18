@@ -1,0 +1,7 @@
+name = "harness-model-matrix/prompted-tooling-task"
+
+[environment]
+dockerfile = "environment/Dockerfile"
+
+[verifier]
+command = "bash /tests/test.sh"

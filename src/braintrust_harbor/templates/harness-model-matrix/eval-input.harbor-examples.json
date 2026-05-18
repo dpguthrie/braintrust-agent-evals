@@ -1,0 +1,55 @@
+{
+  "job_name": "harbor-examples-harness-model",
+  "project": "agent-tooling-demo",
+  "prompt": "After completing the original Harbor task, write /logs/artifacts/summary.json with a recommendation and evidence list, and write /logs/artifacts/narrative.md with a short note about which tools, MCP servers, or skills were useful.",
+  "repo": {
+    "url": "",
+    "ref": ""
+  },
+  "harbor": {
+    "jobs_dir": "jobs",
+    "n_attempts": 1,
+    "n_concurrent_trials": 4,
+    "environment": {
+      "type": "docker"
+    }
+  },
+  "task_sources": [
+    {
+      "name": "hello-mcp",
+      "path": "/tmp/harbor/examples/tasks/hello-mcp",
+      "prompt_mode": "append",
+      "metadata": {
+        "scenario": "hello-mcp",
+        "feature": "mcp"
+      }
+    },
+    {
+      "name": "hello-skills",
+      "path": "/tmp/harbor/examples/tasks/hello-skills",
+      "prompt_mode": "append",
+      "metadata": {
+        "scenario": "hello-skills",
+        "feature": "skills"
+      }
+    }
+  ],
+  "tooling_versions": [
+    {
+      "name": "latest",
+      "install_command": "",
+      "metadata": {
+        "tooling_channel": "latest"
+      }
+    }
+  ],
+  "agents": [
+    {
+      "name": "codex",
+      "model_name": "openai/gpt-5.4",
+      "env": {
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}"
+      }
+    }
+  ]
+}

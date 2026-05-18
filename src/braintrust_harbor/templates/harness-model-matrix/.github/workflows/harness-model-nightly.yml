@@ -1,0 +1,43 @@
+name: Harness Model Matrix Nightly
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 9 * * *"
+
+jobs:
+  nightly:
+    runs-on: ubuntu-latest
+    env:
+      BRAINTRUST_API_KEY: ${{ secrets.BRAINTRUST_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Install eval bridge and Harbor
+        run: |
+          uv tool install braintrust-harbor
+          # Replace this with your team's pinned Harbor install command.
+          harbor --version
+
+      - name: Materialize latest tooling eval
+        run: |
+          python scripts/materialize.py \
+            --input eval-input.json \
+            --tooling-version latest \
+            --out generated/latest
+
+      - name: Run Harbor and upload to Braintrust
+        working-directory: generated/latest
+        run: |
+          bt-harbor run harbor-job.json \
+            --project "agent-tooling-demo" \
+            --suite-artifacts suite-artifacts.json \
+            --metadata metadata.json \
+            --scorer "scorers:summary_present" \
+            --scorer "scorers:used_demo_tool" \
+            --scorer "scorers:no_harbor_exception" \
+            --upload
