@@ -33,9 +33,9 @@ Recommended environment rules:
 3. Create a GitHub release whose tag exactly matches the package version:
 
    ```bash
-   gh release create v0.1.0a1 \
+   gh release create v0.1.0a2 \
      --repo <owner>/<repo> \
-     --title "v0.1.0a1" \
+     --title "v0.1.0a2" \
      --notes "Initial alpha release."
    ```
 
@@ -45,7 +45,7 @@ Recommended environment rules:
 For the current package version, the release tag should be:
 
 ```text
-v0.1.0a1
+v0.1.0a2
 ```
 
 ## Local Build Check

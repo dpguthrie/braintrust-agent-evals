@@ -107,11 +107,25 @@ Library APIs:
 ```python
 from braintrust_harbor import (
     HarborBatchConfig,
+    RunAndImportConfig,
     SuiteArtifactConfig,
+    build_harbor_agents,
     import_harbor_job_to_braintrust,
+    load_toml_matrix,
     run_harbor_batch,
+    run_and_import,
+    write_matrix_harbor_config,
 )
 ```
+
+The package includes optional matrix helpers for the common pattern:
+
+```text
+suite matrix -> generated Harbor job config -> one Harbor run -> one Braintrust experiment
+```
+
+The consuming suite still owns task materialization, fixtures, artifact names,
+and domain scorers.
 
 See:
 

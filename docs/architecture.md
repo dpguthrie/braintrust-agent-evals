@@ -40,6 +40,11 @@ This package owns only the bridge:
 - build a normalized trace view
 - run Braintrust-compatible scorers
 - import one Harbor job as one Braintrust experiment
+- optionally turn a small suite matrix into Harbor agents/job config
+
+The package does not materialize product-specific tasks. A consuming suite can
+use the matrix helpers for targets, credentials, concurrency, and job config
+while keeping its own fixture generation and verifier semantics local.
 
 ## Job Mapping
 
