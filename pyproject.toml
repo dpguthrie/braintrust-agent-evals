@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "braintrust-harbor"
-version = "0.1.0a2"
+version = "0.1.0a4"
 description = "Harbor-first, Braintrust-backed evaluation helpers for coding-agent tooling."
 readme = "README.md"
 requires-python = ">=3.11"
