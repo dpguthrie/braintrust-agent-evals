@@ -3,35 +3,38 @@
 Use this pattern when you want to measure whether a skill, rules file, MCP
 server, or tool-specific guide actually improves coding-agent behavior.
 
-Recommended matrix dimensions:
+Recommended Harbor representation:
 
-```toml
-[defaults]
-scenarios = ["healthy-exit", "measurement-gap", "dataset-gap"]
-max_concurrency = 8
-
-[[skill_variants]]
-name = "with-skill"
-enabled = true
-
-[[skill_variants]]
-name = "no-skill"
-enabled = true
-
-[[targets]]
-name = "codex"
-agent = "codex"
-models = ["openai/gpt-5.4"]
-
-[[targets]]
-name = "claude-code"
-agent = "claude-code"
-models = ["anthropic/claude-sonnet-4-6"]
+```text
+tasks/
+  healthy-exit-with-skill/
+  healthy-exit-no-skill/
+  dataset-gap-with-skill/
+  dataset-gap-no-skill/
 ```
 
-The consuming suite should materialize one Harbor task directory per scenario
-and skill variant. For `no-skill`, keep the same fixtures and verifier, but
-remove the skill installation from the sandbox.
+Each directory is an ordinary Harbor task with its own `task.toml`,
+`instruction.md`, `environment/`, and `tests/`. For `no-skill`, keep the same
+fixtures and verifier, but remove the skill installation from the sandbox.
+
+Then run them with a normal Harbor job config:
+
+```yaml
+job_name: skill-comparison
+n_concurrent_trials: 8
+environment:
+  type: docker
+datasets:
+  - path: tasks
+agents:
+  - name: codex
+    model_name: openai/gpt-5.4
+  - name: claude-code
+    model_name: anthropic/claude-sonnet-4-6
+```
+
+Use task metadata or a sidecar artifact to label rows with `scenario` and
+`variant` when importing the Harbor job into Braintrust.
 
 Useful scores:
 

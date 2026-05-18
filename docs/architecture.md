@@ -24,7 +24,7 @@ Braintrust owns:
 
 The consuming suite owns:
 
-- task matrix
+- task and dataset generation
 - prompts
 - optional repos or fixtures
 - tool/skill installation inside the Harbor task image
@@ -40,11 +40,13 @@ This package owns only the bridge:
 - build a normalized trace view
 - run Braintrust-compatible scorers
 - import one Harbor job as one Braintrust experiment
-- optionally turn a small suite matrix into Harbor agents/job config
 
-The package does not materialize product-specific tasks. A consuming suite can
-use the matrix helpers for targets, credentials, concurrency, and job config
-while keeping its own fixture generation and verifier semantics local.
+The package does not materialize product-specific tasks and does not define a
+parallel matrix format. Use Harbor's native `JobConfig` for datasets, tasks,
+agents, models, environment backends, concurrency, retries, artifacts, and
+metrics. If a suite needs extra dimensions, such as a skill/no-skill comparison,
+represent those dimensions as ordinary Harbor tasks or datasets and let Harbor
+fan them out as trials.
 
 ## Job Mapping
 
