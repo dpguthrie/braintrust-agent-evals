@@ -36,10 +36,10 @@ You need:
 - `BRAINTRUST_API_KEY` only when using `--upload`. Local preview imports work
   without uploading.
 
-Install this package from a checkout:
+Install `braintrust-harbor` from PyPI:
 
 ```bash
-uv tool install -e .
+uv tool install braintrust-harbor
 ```
 
 Check the CLIs:
@@ -49,10 +49,17 @@ bt-harbor --help
 harbor --version
 ```
 
-After publishing, the package can also be run with:
+You can also run the latest published package without installing a persistent
+tool:
 
 ```bash
 uvx braintrust-harbor --help
+```
+
+When developing from a checkout, install the local copy instead:
+
+```bash
+uv tool install -e .
 ```
 
 ## Quickstart
