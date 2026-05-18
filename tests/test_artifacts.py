@@ -62,6 +62,7 @@ class ArtifactLoadingTests(unittest.TestCase):
             output = outputs[0]
             self.assertEqual(output["summary"], {"status": "done"})
             self.assertEqual(output["commands"][0]["command_class"], "inspect")
+            self.assertTrue(str(output["trajectory_path"]).endswith("agent/trajectory.json"))
             self.assertEqual(output["reward"], {"score": 1.0})
             self.assertEqual(output["task_metadata"]["metadata"]["tool_version"], "1.2.3")
             self.assertEqual(output["eval_input"], {"prompt": "debug this tool"})
@@ -100,6 +101,7 @@ class ArtifactLoadingTests(unittest.TestCase):
             self.assertIn("verify", output["steps"])
             self.assertEqual(output["steps"]["verify"]["reward"], {"reward": 0.5})
             self.assertEqual(output["steps"]["verify"]["commands"][0]["command_class"], "check")
+            self.assertTrue(str(output["steps"]["verify"]["trajectory_path"]).endswith("agent/trajectory.json"))
             self.assertEqual(output["usage_metrics"]["input_tokens"], 7)
             self.assertEqual(output["usage_metrics"]["output_tokens"], 3)
             self.assertEqual(output["usage_metrics"]["total_tokens"], 10)

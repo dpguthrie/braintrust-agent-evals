@@ -132,6 +132,10 @@ Braintrust concepts:
 - Traces preserve the trial trajectory, tool calls, command logs, and scorer
   spans when those artifacts are available.
 
+Current tracing is an offline import from completed Harbor job artifacts, not a
+live hook into Harbor's eval lifecycle. See [Tracing](docs/tracing.md) for the
+exact contract and limitations.
+
 This package does not replace Harbor's `JobConfig`, agent adapters, sandbox
 management, or task format. It also does not impose your product's scoring
 policy. Suites should keep product-specific prompts, fixtures, verifiers, and
@@ -226,6 +230,7 @@ Braintrust:
 Project docs:
 
 - [Architecture](docs/architecture.md)
+- [Tracing](docs/tracing.md)
 - [Scorers](docs/scorers.md)
 - [Compatibility](docs/compatibility.md)
 - [Releasing](docs/releasing.md)

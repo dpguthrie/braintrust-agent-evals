@@ -415,6 +415,7 @@ def _row_output(output: dict[str, Any], suite_config: SuiteArtifactConfig) -> di
         "harbor_result": output.get("harbor_result"),
         "exception_text": output.get("exception_text"),
         "trial_log": output.get("trial_log"),
+        "trajectory_path": output.get("trajectory_path"),
         "steps": _row_steps(output, suite_config),
     }
 
@@ -439,6 +440,7 @@ def _row_steps(output: dict[str, Any], suite_config: SuiteArtifactConfig) -> dic
             "reward": step.get("reward"),
             "reward_details": step.get("reward_details"),
             "usage_metrics": step.get("usage_metrics"),
+            "trajectory_path": step.get("trajectory_path"),
             "artifact_manifest": step.get("artifact_manifest"),
             "artifacts": step.get("artifacts"),
         }

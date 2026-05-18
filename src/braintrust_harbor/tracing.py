@@ -13,6 +13,7 @@ from .metrics import braintrust_metric_payload, extract_usage_metrics, normalize
 
 
 NORMALIZED_TRACE_SCHEMA = "harbor-normalized-trace/v1"
+SUPPORTED_ATIF_SCHEMA_PREFIX = "ATIF-v1."
 
 
 def _current_span() -> Any | None:
@@ -63,17 +64,78 @@ def _step_end_time(steps: list[Any], index: int, fallback: float | None) -> floa
     return fallback
 
 
-def _observation_output(step: dict[str, Any]) -> Any:
+def _observation_results(step: dict[str, Any]) -> list[Any]:
     observation = step.get("observation")
     if not isinstance(observation, dict):
-        return None
+        return []
     results = observation.get("results")
     if not isinstance(results, list):
+        return []
+    return results
+
+
+def _observation_content(result: Any) -> Any:
+    return result.get("content") if isinstance(result, dict) else result
+
+
+def _observation_output(step: dict[str, Any], tool_call: dict[str, Any] | None = None) -> Any:
+    results = _observation_results(step)
+    if not results:
         return None
-    return [
-        item.get("content") if isinstance(item, dict) else item
-        for item in results
-    ]
+
+    tool_call_id = tool_call.get("tool_call_id") if isinstance(tool_call, dict) else None
+    if tool_call_id is not None:
+        matches = [
+            _observation_content(result)
+            for result in results
+            if isinstance(result, dict) and result.get("source_call_id") == tool_call_id
+        ]
+        if len(matches) == 1:
+            return matches[0]
+        if matches:
+            return matches
+
+    values = [_observation_content(result) for result in results]
+    return values[0] if len(values) == 1 else values
+
+
+def _trajectory_import_warnings(output: dict[str, Any], path: str) -> list[str]:
+    trajectory = output.get("trajectory")
+    if not isinstance(trajectory, dict):
+        return []
+
+    warnings: list[str] = []
+    schema_version = trajectory.get("schema_version")
+    if not isinstance(schema_version, str) or not schema_version:
+        warnings.append(f"{path}: missing ATIF schema_version")
+    elif not schema_version.startswith(SUPPORTED_ATIF_SCHEMA_PREFIX):
+        warnings.append(f"{path}: unsupported ATIF schema_version {schema_version!r}")
+
+    steps = trajectory.get("steps")
+    if not isinstance(steps, list):
+        warnings.append(f"{path}: missing ATIF steps list")
+        return warnings
+
+    for index, step in enumerate(steps[: int(os.getenv("HARBOR_TRACE_MAX_STEPS", "200"))], start=1):
+        if not isinstance(step, dict):
+            warnings.append(f"{path}: step {index} is not an object")
+            continue
+        source = step.get("source")
+        if source not in {"agent", "system", "user", "environment"}:
+            warnings.append(f"{path}: step {index} has unsupported source {source!r}")
+        tool_calls = step.get("tool_calls")
+        if tool_calls is not None and not isinstance(tool_calls, list):
+            warnings.append(f"{path}: step {index} tool_calls is not a list")
+    return warnings
+
+
+def trace_import_warnings(output: dict[str, Any]) -> list[str]:
+    """Return best-effort warnings about imported Harbor trace artifacts."""
+
+    warnings = _trajectory_import_warnings(output, "trial")
+    for step_name, step in _iter_step_outputs(output):
+        warnings.extend(_trajectory_import_warnings(step, f"step.{step_name}"))
+    return warnings
 
 
 def _record_warning(warnings: list[str] | None, message: str, exc: Exception | None = None) -> None:
@@ -242,6 +304,8 @@ def _log_harbor_result(
         returncode=output.get("returncode"),
         duration_sec=output.get("duration_sec"),
         command_count=len(command_rows),
+        trace_import_warnings=trace_import_warnings(output) or None,
+        trajectory_path=output.get("trajectory_path"),
         usage_metrics=usage_metrics or None,
         exception_type=exception_info.get("exception_type") if isinstance(exception_info, dict) else None,
     )
@@ -282,7 +346,7 @@ def _log_command_spans(
     suite_config = _suite_artifact_config(output, suite_artifacts)
     for index, row in enumerate(_command_log_rows(output, suite_config), start=1):
         command_class = str(row.get("command_class") or "command")
-        start_time = _timestamp(row.get("timestamp")) or _timestamp(row.get("started_at"))
+        start_time = _timestamp(row.get("timestamp")) or _timestamp(row.get("started_at")) or _timestamp(row.get("ts"))
         command_span = _start_child(
             parent,
             name=_command_span_name(command_class, suite_config),
@@ -311,7 +375,7 @@ def _log_command_spans(
         finally:
             close_span(
                 command_span,
-                end_time=_timestamp(row.get("finished_at")) or start_time,
+                end_time=_timestamp(row.get("finished_at")) or _timestamp(row.get("ts")) or start_time,
                 warnings=warnings,
             )
 
@@ -366,10 +430,10 @@ def _log_trajectory_spans(parent: Any, output: dict[str, Any], warnings: list[st
                     close_span(message_span, end_time=end_time, warnings=warnings)
 
             if isinstance(tool_calls, list):
-                observation_output = _observation_output(step)
                 for call_index, tool_call in enumerate(tool_calls, start=1):
                     if not isinstance(tool_call, dict):
                         continue
+                    observation_output = _observation_output(step, tool_call)
                     tool_name = str(tool_call.get("function_name") or "tool")
                     tool_span = _start_child(
                         parent,
@@ -465,6 +529,8 @@ def _log_step_spans(
                     normalized_kind="harness_step",
                     step_name=step_name,
                     runtime_dir=merged.get("runtime_dir"),
+                    trace_import_warnings=_trajectory_import_warnings(merged, f"step.{step_name}") or None,
+                    trajectory_path=merged.get("trajectory_path"),
                     usage_metrics=usage_metrics or None,
                 ),
                 metrics=braintrust_metric_payload(usage_metrics) or None,
@@ -522,6 +588,8 @@ def normalized_trace_span_records(
         returncode=output.get("returncode"),
         duration_sec=output.get("duration_sec"),
         command_count=len(command_rows),
+        trace_import_warnings=trace_import_warnings(output) or None,
+        trajectory_path=output.get("trajectory_path"),
         usage_metrics=usage_metrics or None,
         exception_type=exception_info.get("exception_type") if isinstance(exception_info, dict) else None,
     )
@@ -603,10 +671,10 @@ def normalized_trace_span_records(
                 }
             )
             if isinstance(tool_calls, list):
-                observation_output = _observation_output(step)
                 for call_index, tool_call in enumerate(tool_calls, start=1):
                     if not isinstance(tool_call, dict):
                         continue
+                    observation_output = _observation_output(step, tool_call)
                     tool_name = str(tool_call.get("function_name") or "tool")
                     name = f"agent.tool.{tool_name}"
                     records.append(
@@ -665,6 +733,7 @@ def log_harbor_trace(
     parent = parent or _current_span()
     if parent is None:
         return warnings
+    warnings.extend(trace_import_warnings(output))
     _log_harbor_result(parent, output, suite_artifacts=suite_artifacts, warnings=warnings)
     _log_command_spans(parent, output, suite_artifacts=suite_artifacts, warnings=warnings)
     _log_trajectory_spans(parent, output, warnings=warnings)

@@ -37,7 +37,7 @@ This package owns only the bridge:
 - run `harbor run --config ...`
 - find the produced Harbor job directory
 - load Harbor result files and configured suite artifacts
-- build a normalized trace view
+- build a best-effort offline normalized trace view
 - run Braintrust-compatible scorers
 - import one Harbor job as one Braintrust experiment
 
@@ -65,7 +65,7 @@ spawn each agent task; it receives the completed Harbor job and imports it.
 ## Trace Model
 
 Imported rows get an `eval` root span and a `task` child span. Under the task
-span, the importer logs normalized spans for:
+span, the importer logs reconstructed normalized spans for:
 
 - the Harbor trial
 - configured command-log rows
@@ -73,11 +73,19 @@ span, the importer logs normalized spans for:
 - ATIF tool calls
 - Harbor step directories, when present
 
+This is an offline import, not a live Harbor lifecycle integration. The importer
+only sees files Harbor wrote to disk after a trial. Missing or nonstandard trace
+artifacts are imported on a best-effort basis and labeled with
+`trace_import_warnings` metadata.
+
 The span names are display names. Scorers should prefer stable semantic metadata
 when possible, such as `normalized_kind`, command classes, tool names, and
 ordered events. Span names are still useful for trajectory-level checks, but
 they should not be the only source of truth when scorers need to work across
 multiple tracing integrations.
+
+See [Tracing](tracing.md) for the trace contract, limitations, and the shape of
+a better native Harbor lifecycle integration.
 
 ## Suite Artifacts
 

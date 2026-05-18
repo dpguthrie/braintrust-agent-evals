@@ -4,7 +4,7 @@ from .artifacts import ArtifactSpec, SuiteArtifactConfig, load_harbor_job_output
 from .braintrust_importer import BraintrustImportResult, ImportedTrace, ScorerArgs, TraceLike, import_harbor_job_to_braintrust
 from .harbor_batch import HarborBatchConfig, HarborBatchResult, run_harbor_batch
 from .metrics import braintrust_metric_payload, extract_usage_metrics, normalize_usage_metrics
-from .tracing import log_harbor_trace, normalized_trace_span_records
+from .tracing import log_harbor_trace, normalized_trace_span_records, trace_import_warnings
 
 __all__ = [
     "BraintrustImportResult",
@@ -24,4 +24,5 @@ __all__ = [
     "normalize_usage_metrics",
     "normalized_trace_span_records",
     "run_harbor_batch",
+    "trace_import_warnings",
 ]

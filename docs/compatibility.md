@@ -33,8 +33,8 @@ harbor run --config <path> --job-name <name>
 ```
 
 The importer expects a Harbor job directory with trial `result.json`,
-`config.json`, optional `agent/trajectory.json`, optional `verifier/reward.json`,
-and optional `artifacts/`.
+`config.json`, optional `agent/trajectory.json`, optional `agent/atif.json`,
+optional `verifier/reward.json`, optional `artifacts/`, and optional `steps/`.
 
 This package should not subclass or replace Harbor's built-in agents. If a team
 needs a custom harness, implement a Harbor agent adapter and reference it from
@@ -53,3 +53,7 @@ The normalized import trace currently uses:
 These names are display-oriented and may evolve before a stable release. Scorers
 that need online/offline portability should classify spans by semantic metadata
 and command/tool attributes, not only by exact display name.
+
+This is a best-effort offline import contract. It is not a guarantee that every
+Harbor lifecycle event appears as a Braintrust span. Nonstandard ATIF shapes are
+preserved where possible and recorded in `trace_import_warnings` metadata.

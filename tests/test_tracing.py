@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from braintrust_harbor import ArtifactSpec, SuiteArtifactConfig, normalized_trace_span_records
+from braintrust_harbor import ArtifactSpec, SuiteArtifactConfig, normalized_trace_span_records, trace_import_warnings
 
 
 class TraceNormalizationTests(unittest.TestCase):
@@ -35,6 +35,7 @@ class TraceNormalizationTests(unittest.TestCase):
                 "run": {
                     "runtime_dir": "/tmp/job/trial/steps/run",
                     "trajectory": {
+                        "schema_version": "ATIF-v1.4",
                         "steps": [
                             {
                                 "source": "agent",
@@ -58,6 +59,57 @@ class TraceNormalizationTests(unittest.TestCase):
         step_record = next(record for record in records if record["name"] == "harbor.step.run")
         self.assertEqual(step_record["metadata"]["normalized_kind"], "harness_step")
         self.assertEqual(step_record["metadata"]["step_name"], "run")
+
+    def test_tool_observations_are_matched_by_source_call_id(self) -> None:
+        records = normalized_trace_span_records(
+            {
+                "harbor_result": {"status": "done"},
+                "trajectory": {
+                    "schema_version": "ATIF-v1.4",
+                    "steps": [
+                        {
+                            "source": "agent",
+                            "message": "I will call two tools",
+                            "tool_calls": [
+                                {"tool_call_id": "call_1", "function_name": "first", "arguments": {}},
+                                {"tool_call_id": "call_2", "function_name": "second", "arguments": {}},
+                            ],
+                            "observation": {
+                                "results": [
+                                    {"source_call_id": "call_2", "content": "second result"},
+                                    {"source_call_id": "call_1", "content": "first result"},
+                                ]
+                            },
+                        }
+                    ],
+                },
+            }
+        )
+
+        first = next(record for record in records if record["name"] == "agent.tool.first")
+        second = next(record for record in records if record["name"] == "agent.tool.second")
+        self.assertEqual(first["output"], "first result")
+        self.assertEqual(second["output"], "second result")
+
+    def test_trace_import_warnings_flag_nonstandard_trajectory_shapes(self) -> None:
+        output = {
+            "harbor_result": {"status": "done"},
+            "trajectory": {
+                "schema_version": "custom-v0",
+                "steps": [
+                    {"source": "agent", "tool_calls": {"not": "a list"}},
+                    {"source": "surprise"},
+                ],
+            },
+        }
+
+        warnings = trace_import_warnings(output)
+        self.assertIn("trial: unsupported ATIF schema_version 'custom-v0'", warnings)
+        self.assertIn("trial: step 1 tool_calls is not a list", warnings)
+        self.assertIn("trial: step 2 has unsupported source 'surprise'", warnings)
+
+        harbor_record = normalized_trace_span_records(output)[0]
+        self.assertEqual(harbor_record["metadata"]["trace_import_warnings"], warnings)
 
 
 if __name__ == "__main__":

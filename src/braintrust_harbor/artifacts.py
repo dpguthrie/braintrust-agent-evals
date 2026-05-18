@@ -284,6 +284,7 @@ def _load_runtime_dirs(
         "reward_details": load_optional_json(verifier_dir / "reward-details.json"),
         "artifact_manifest": load_optional_json(artifacts_dir / "manifest.json"),
         "trajectory": None,
+        "trajectory_path": None,
         "artifacts": {},
     }
     trajectory_path = find_first_existing(
@@ -294,6 +295,7 @@ def _load_runtime_dirs(
             artifacts_dir / "atif.json",
         ]
     )
+    output["trajectory_path"] = str(trajectory_path) if trajectory_path is not None else None
     output["trajectory"] = load_optional_json(trajectory_path)
     for spec in contract.artifacts:
         artifact_path = find_first_existing(_contract_path_candidates(runtime_path, spec.paths))
